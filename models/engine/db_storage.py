@@ -6,6 +6,7 @@ from models.base_model import BaseModel, Base
 from os import getenv
 from model_state import Base, State
 from sqlalchemy import (create_engine)
+from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
 
     Base.metadata.create_all(engine)
@@ -75,6 +76,10 @@ from sqlalchemy.orm import sessionmaker
         def reload(self):
             """Creating all tables"""
             Base.metadata.create_all(self.__engine)
-                        
+            
+            session_factory = sessionmaker(self.__engine, expire_on_commit=False)
+            self.__session = scoped_session(session_factory)
+            
+            
         
 

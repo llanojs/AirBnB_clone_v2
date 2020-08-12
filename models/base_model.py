@@ -36,7 +36,8 @@ class BaseModel:
                                                         '%Y-%m-%dT%H:%M:%S.%f')
                 elif not key == 'id':
                     self.id = str(uuid.uuid4())
-                elif not 
+                elif not key == 'created_at':
+                    
                 elif not key != "__class__":
                     setattr(self, key, value)
         else:
