@@ -18,11 +18,11 @@ class BaseModel:
     created_at = Column('created_at',
                          DateTime,
                          nullable=False,
-                         default=DateTime.utcnow())
+                         default=datetime.utcnow())
     updated_at = Column('updated_at',
                          DateTime,
                          nullable=False,
-                         default=DateTime.utcnow())
+                         default=datetime.utcnow())
 
     def __init__(self, *args, **kwargs):
         """Instatntiates a new model"""
@@ -37,13 +37,12 @@ class BaseModel:
                 elif not key == 'id':
                     self.id = str(uuid.uuid4())
                 elif not key == 'created_at':
-                    
+                    self.created_at = self.updated_at = datetime.now()       
                 elif not key != "__class__":
                     setattr(self, key, value)
         else:
             self.id = str(uuid.uuid4())
-            self.created_at = self.updated_at = datetime.now()       
-
+            self.created_at = self.updated_at = datetime.now()
     def __str__(self):
         """Returns a string representation of the instance"""
         cls = (str(type(self)).split('.')[-1]).split('\'')[0]
