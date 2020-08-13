@@ -11,18 +11,9 @@ Base = declarative_base()
 class BaseModel:
     """A base class for all hbnb models"""
 
-    id = Column('id',
-                 String(60),
-                 primary_key=True,
-                 nullable=False)
-    created_at = Column('created_at',
-                         DateTime,
-                         nullable=False,
-                         default=datetime.utcnow())
-    updated_at = Column('updated_at',
-                         DateTime,
-                         nullable=False,
-                         default=datetime.utcnow())
+    id = Column(String(60), primary_key=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow(), nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow(), nullable=False)
 
     def __init__(self, *args, **kwargs):
         """Instatntiates a new model"""
@@ -34,15 +25,16 @@ class BaseModel:
                 elif key == "updated_at":
                     self.updated_at = datetime.strptime(value,
                                                         '%Y-%m-%dT%H:%M:%S.%f')
-                elif not key == 'id':
-                    self.id = str(uuid.uuid4())
-                elif not key == 'created_at':
-                    self.created_at = self.updated_at = datetime.now()       
                 elif not key != "__class__":
                     setattr(self, key, value)
+            if 'id' not in kwargs:
+                self.id = str(uuid.uuid4())
+            if 'created_at' not in kwargs:
+                self.created_at = self.updated_at = datetime.now()
         else:
             self.id = str(uuid.uuid4())
             self.created_at = self.updated_at = datetime.now()
+
     def __str__(self):
         """Returns a string representation of the instance"""
         cls = (str(type(self)).split('.')[-1]).split('\'')[0]
@@ -59,16 +51,14 @@ class BaseModel:
         """Convert instance into dict format"""
         dictionary = {}
         dictionary.update(self.__dict__)
-
-        if '_sa_instance_state' in dictionary:
-            del dictionary['_sa_instance_state']
-
         dictionary.update({'__class__':
-                          (str(type(self)).split('.')[-1]).split('\'')[0]})
+                           (str(type(self)).split('.')[-1]).split('\'')[0]})
         dictionary['created_at'] = self.created_at.isoformat()
         dictionary['updated_at'] = self.updated_at.isoformat()
+        if '_sa_instance_state' in dictionary:
+            del dictionary['_sa_instance_state']
         return dictionary
-    
+
     def delete(self):
         """ delete the current instance from the storage """
         from models import storage

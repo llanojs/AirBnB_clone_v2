@@ -1,4 +1,3 @@
-
 #!/usr/bin/python3
 """Start link class to table in database
 """
@@ -25,11 +24,11 @@ class DBStorage:
         password = getenv('HBNB_MYSQL_PWD')
         host = getenv('HBNB_MYSQL_HOST')
         db_name = getenv('HBNB_MYSQL_DB')
-        self.__engine = create_engine('mysql+mysqldb://{}:{}@{}:3306/{}'
+        self.__engine = create_engine('mysql+mysqldb://{}:{}@{}/{}'
                                       .format(username,
-                                             password,
-                                             host,
-                                             db_name),
+                                              password,
+                                              host,
+                                              db_name),
                                       pool_pre_ping=True)
         if getenv('HBNB_ENV') == 'test':
             Base.metadata.drop_all(self.__engine)
@@ -41,8 +40,7 @@ class DBStorage:
         classes = [User, State, City, Amenity, Place, Review]
 
         if cls is None:
-            _query = self.__session(State,
-                                  City).all()
+            _query = self.__session.query(State, City).all()
 
             for obj in _query:
                 key_obj = ("{}.{}".format(obj.__class__.name, obj.id))
@@ -50,7 +48,7 @@ class DBStorage:
             return dictionary
         else:
             if cls in classes:
-                _query = self.__session(cls).all()
+                _query = self.__session.query(cls).all()
                 for obj in _query:
                     key_obj = ("{}.{}".format(obj.__class__.name, obj.id))
                     dictionary.update({key_obj: obj})
@@ -74,7 +72,7 @@ class DBStorage:
     def reload(self):
         """Creating all tables"""
         Base.metadata.create_all(self.__engine)
-        
+
         Session = scoped_session(sessionmaker(
             bind=self.__engine,
             expire_on_commit=False,

@@ -2,6 +2,7 @@
 """ Console Module """
 import cmd
 import sys
+from os import getenv
 from models.base_model import BaseModel
 from models.__init__ import storage
 from models.user import User
@@ -117,42 +118,31 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """ Create an object of any class"""
+        input_list = args.split(" ")
+        class_name = input_list[0]
+
         if not args:
             print("** class name missing **")
             return
-        input_list = args.split(" ")
-        class_name = input_list[0]
-        if class_name not in HBNBCommand.classes:
+        elif class_name not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
 
-        kwargs = {}
-
-        for parameter in input_list[1:]:
-            if "=" not in parameter:
-                continue
-            key, value = parameter.split("=")
-            if HBNBCommand.is_float(value):
-                kwargs[key] = float(value)
-            elif HBNBCommand.is_int(value):
-                kwargs[key] = int(value)
-            else:
-                if value[0] == "\"" and value[-1] == "\"":
-                    value = value[1:-1]
-                    flag = 0  # flag to validated to string with valid sintax
-                    for idx, char in enumerate(value):
-                        if char == "\"":
-                            if value[idx - 1] != "\\":
-                                flag = 1
-                                break
-                    if flag == 1:
-                        continue
-                    no_space = value.replace("_", " ")
-                    kwargs[key] = no_space
-
         new_instance = HBNBCommand.classes[class_name]()
-        new_instance.__dict__.update(kwargs)
-        storage.save()
+
+        if len(input_list) >= 2:
+            for parameter in input_list[1:]:
+                key, value = parameter.split("=")
+                if value[0] == '"':
+                    value = value.replace('"', '')
+                    value = value.replace('_', ' ')
+                elif value.isdecimal():
+                    value = int(value)
+                else:
+                    value = float(value)
+                setattr(new_instance, key, value)
+
+        new_instance.save()
         print(new_instance.id)
 
     def help_create(self):
@@ -235,11 +225,21 @@ class HBNBCommand(cmd.Cmd):
             if args not in HBNBCommand.classes:
                 print("** class doesn't exist **")
                 return
-            for k, v in storage._FileStorage__objects.items():
+            if getenv("HBNB_TYPE_STORAGE") == 'db':
+                _list = storage.all().items()
+            else:
+                _list = storage._FileStorage__objects.items()
+
+            for k, v in _list:
                 if k.split('.')[0] == args:
                     print_list.append(str(v))
         else:
-            for k, v in storage._FileStorage__objects.items():
+            if getenv("HBNB_TYPE_STORAGE") == 'db':
+                _list = storage.all().items()
+            else:
+                _list = storage._FileStorage__objects.items()
+
+            for k, v in _list:
                 print_list.append(str(v))
 
         print(print_list)
@@ -348,23 +348,6 @@ class HBNBCommand(cmd.Cmd):
         """ Help information for the update class """
         print("Updates an object with new information")
         print("Usage: update <className> <id> <attName> <attVal>\n")
-
-    @staticmethod
-    def is_int(n):
-        """ checks if integer"""
-        try:
-            int(n)
-            return True
-        except ValueError:
-            return False
-
-    @staticmethod
-    def is_float(n):
-        try:
-            float(n)
-            return True
-        except ValueError:
-            return False
 
 
 if __name__ == "__main__":
