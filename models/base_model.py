@@ -25,7 +25,7 @@ class BaseModel:
                 elif key == "updated_at":
                     self.updated_at = datetime.strptime(value,
                                                         '%Y-%m-%dT%H:%M:%S.%f')
-                elif not key != "__class__":
+                elif key != "__class__":
                     setattr(self, key, value)
             if 'id' not in kwargs:
                 self.id = str(uuid.uuid4())
