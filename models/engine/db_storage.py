@@ -2,7 +2,7 @@
 #!/usr/bin/python3
 """Start link class to table in database
 """
-from models.base_model import BaseModel, Base
+from models.base_model import Base
 from models.user import User
 from models.state import State
 from models.city import City
@@ -10,8 +10,8 @@ from models.amenity import Amenity
 from models.place import Place
 from models.review import Review
 from os import getenv
-from sqlalchemy import (create_engine)
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, scoped_session
 
 
 class DBStorage:
@@ -22,8 +22,8 @@ class DBStorage:
     def __init__(self):
         """Variables to DBStorage"""
         username = getenv('HBNB_MYSQL_USER')
-        password = getenv('HBNB_MYSQL_PWS')
-        host = getenv('HBNB_MYSQL_DB')
+        password = getenv('HBNB_MYSQL_PWD')
+        host = getenv('HBNB_MYSQL_HOST')
         db_name = getenv('HBNB_MYSQL_DB')
         self.__engine = create_engine('mysql+mysqldb://{}:{}@{}:3306/{}'
                                       .format(username,
@@ -41,12 +41,8 @@ class DBStorage:
         classes = [User, State, City, Amenity, Place, Review]
 
         if cls is None:
-            _query = self.session(User,
-                                  State,
-                                  City,
-                                  Amenity,
-                                  Place,
-                                  Review).all()
+            _query = self.__session(State,
+                                  City).all()
 
             for obj in _query:
                 key_obj = ("{}.{}".format(obj.__class__.name, obj.id))
@@ -54,7 +50,7 @@ class DBStorage:
             return dictionary
         else:
             if cls in classes:
-                _query = self.session(cls).all()
+                _query = self.__session(cls).all()
                 for obj in _query:
                     key_obj = ("{}.{}".format(obj.__class__.name, obj.id))
                     dictionary.update({key_obj: obj})
@@ -64,19 +60,23 @@ class DBStorage:
 
     def new(self, obj):
         """New object in database"""
-        self.session.add()
+        self.__session.add(obj)
 
     def save(self):
         """save changes"""
-        self.session.commit()
+        self.__session.commit()
 
     def delete(self, obj=None):
         """Delete objetc from database"""
-        self.session.delete(obj)
+        if obj is not None:
+            self.__session.delete(obj)
 
     def reload(self):
         """Creating all tables"""
         Base.metadata.create_all(self.__engine)
-
-        session_factory = sessionmaker(self.__engine, expire_on_commit=False)
-        self.__session = scoped_session(session_factory)
+        
+        Session = scoped_session(sessionmaker(
+            bind=self.__engine,
+            expire_on_commit=False,
+        ))
+        self.__session = Session()
