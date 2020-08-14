@@ -1,9 +1,22 @@
 #!/usr/bin/python3
 """ Place Module for HBNB project """
 from models.base_model import BaseModel, Base
-from sqlalchemy import Column, String, Integer, Float, ForeignKey
+from sqlalchemy import Column, String, Integer, Float, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from os import getenv
+
+asociation = Table('place_amenity', Base.metadata,
+                   Column('place_id',
+                          String(60),
+                          ForeignKey("places.id"),
+                          primary_key=True,
+                          nullable=False),
+                   Column('amenity_id',
+                          String(60),
+                          ForeignKey("amenities.id"),
+                          primary_key=True,
+                          nullable=False)
+                   )
 
 
 class Place(BaseModel, Base):
@@ -27,6 +40,12 @@ class Place(BaseModel, Base):
             'Review',
             backref='place',
             cascade='all, delete')
+
+        amenities = relationship(
+            'Amenity',
+            secondary="place_amenity",
+            viewonly=False
+        )
     else:
         @property
         def reviews(self):
@@ -42,3 +61,25 @@ class Place(BaseModel, Base):
                 if _review.place_id == self.id:
                     review_list.append(_review)
             return review_list
+
+        @property
+        def amenities(self):
+            """Getter method for reviews
+            Return: list of reviews with place_id equal to self.id
+            """
+            from models import storage
+            from models.amenities import Amenity
+            amenities_saved = storage.all(Amenity)
+            amenities_obj = []
+
+            for obj in amenities_saved.values():
+                if obj.id in amenity_ids:
+                    amenities_obj.append(obj)
+            return amenities_obj
+
+        @setter.amenities
+        def amenities(self, obj):
+            """obj inside """
+            from models.amenities import Amenity
+            if isinstance(obj, Amenity):
+                amenity_ids.append(obj.id)
