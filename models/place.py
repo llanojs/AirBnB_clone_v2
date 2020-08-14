@@ -77,7 +77,7 @@ class Place(BaseModel, Base):
                     amenities_obj.append(obj)
             return amenities_obj
 
-        @setter.amenities
+        @amenities.setter
         def amenities(self, obj):
             """obj inside """
             from models.amenities import Amenity
